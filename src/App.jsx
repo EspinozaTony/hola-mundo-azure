@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
+import { loginRequest } from './authConfig';
 
 function App() {
   const [registros, setRegistros] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState("");
+  const { instance, accounts } = useMsal();
 
-  // ⚠️ PEGA TU URL PÚBLICA DE AZURE AQUÍ ABAJO:
+  // ⚠️ PON TU URL PÚBLICA REAL DE AZURE AQUÍ ABAJO:
   const API_URL = "https://tony-api-12345.azurewebsites.net/api/api";
 
   // Función GET: Traer los datos de la base de datos
@@ -18,6 +21,16 @@ function App() {
       console.error("Error al cargar:", error);
     }
   };
+
+  // Funciones para los botones de Login/Logout
+  // Funciones para los botones de Login/Logout (AHORA CON REDIRECT)
+  const handleLogin = () => {
+    instance.loginRedirect(loginRequest).catch(e => console.error(e));
+  }
+
+  const handleLogout = () => {
+    instance.logoutRedirect().catch(e => console.error(e));
+  }
 
   // Cargar los datos automáticamente al abrir la página
   useEffect(() => {
@@ -47,35 +60,57 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial', textAlign: 'center' }}>
-      <h1>Proyecto Serverless de Tony 🚀</h1>
-      <p>Conectado a Azure Functions y Cosmos DB</p>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <input 
-          type="text"
-          value={nuevoMensaje} 
-          onChange={(e) => setNuevoMensaje(e.target.value)} 
-          placeholder="Escribe un mensaje para el profe..." 
-          style={{ padding: '10px', width: '300px', marginRight: '10px' }}
-        />
-        <button onClick={guardarDato} style={{ padding: '10px', cursor: 'pointer' }}>
-          Guardar Dato
-        </button>
-      </div>
+    <div>
+      {/* =========================================
+          PANTALLA PARA INTRUSOS (NO LOGUEADOS)
+      ========================================= */}
+      <UnauthenticatedTemplate>
+        <h1>Bienvenido a la App Serverless 🚀</h1>
+        <p>Por favor, inicia sesión para ver y guardar tus tareas.</p>
+        <button onClick={handleLogin}>Iniciar Sesión con Microsoft</button>
+      </UnauthenticatedTemplate>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {registros.map((reg) => (
-          <li key={reg.id} style={{ margin: '10px 0', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
-            <span>{reg.mensaje}</span>
-            <button onClick={() => eliminarDato(reg.id)} style={{ background: 'red', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '3px' }}>
-              Eliminar
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* =========================================
+          PANTALLA PARA EL USUARIO AUTORIZADO
+      ========================================= */}
+      <AuthenticatedTemplate>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          {/* Muestra el nombre de quien inició sesión */}
+          <h3>Hola, {accounts[0]?.name} 👋</h3> 
+          <button onClick={handleLogout} style={{ backgroundColor: '#ff4d4d', color: 'white' }}>
+            Cerrar Sesión
+          </button>
+        </div>
+        
+        {/* === TU LISTA DE TAREAS === */}
+        <h1>Mi Lista Serverless</h1>
+        
+        <div>
+          <input 
+            type="text" 
+            value={nuevoMensaje} 
+            onChange={(e) => setNuevoMensaje(e.target.value)} 
+            placeholder="Escribe una nueva tarea..."
+          />
+          <button onClick={guardarDato}>Guardar Dato</button>
+        </div>
+        
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
+          {registros.map((registro) => (
+            <li key={registro.id} style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 0', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px', color: 'black' }}>
+              <span>{registro.mensaje}</span>
+              <button 
+                onClick={() => eliminarDato(registro.id)} 
+                style={{ backgroundColor: 'red', color: 'white', marginLeft: '10px' }}>
+                Eliminar
+              </button>
+            </li>
+          ))}
+        </ul>
+
+      </AuthenticatedTemplate>
     </div>
-  );
+  )
 }
 
 export default App;
