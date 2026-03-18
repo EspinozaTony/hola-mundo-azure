@@ -4,7 +4,7 @@ export const msalConfig = {
         clientId: "018df15c-311a-474d-a22a-51bfef3187dd",
         authority: "https://login.microsoftonline.com/common",
         // 👇 PON TU URL PÚBLICA AQUÍ:
-        redirectUri: "https://tonystorage12345.z19.web.core.windows.net/", 
+        redirectUri: "https://delightful-grass-0de151410.2.azurestaticapps.net/",
     },
     cache: {
         cacheLocation: "sessionStorage", // Guarda la sesión temporalmente
